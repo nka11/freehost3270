@@ -1,7 +1,9 @@
 target
 build
 *.class
-.project
-.classpath
-.settings/
-.metadata
+*project
+*/*project
+*classpath
+*/*classpath
+*settings/
+*metadata

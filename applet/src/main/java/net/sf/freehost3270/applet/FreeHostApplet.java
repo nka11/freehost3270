@@ -23,22 +23,25 @@
 package net.sf.freehost3270.applet;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Container;
-import java.awt.event.ActionEvent;
+import java.awt.Font;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.awt.print.PrinterException;
-import java.awt.print.PrinterJob;
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
-import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JApplet;
-import javax.swing.JToolBar;
 
 import net.sf.freehost3270.client.Host;
+import net.sf.freehost3270.client.IsProtectedException;
+import net.sf.freehost3270.client.RW3270;
 import net.sf.freehost3270.gui.JTerminalScreen;
 
 
@@ -48,7 +51,6 @@ import net.sf.freehost3270.gui.JTerminalScreen;
 public class FreeHostApplet extends JApplet implements ComponentListener {
     private static final Logger log = Logger.getLogger(FreeHostApplet.class.getName());
     private JTerminalScreen scr;
-    private JToolBar toolBar;
     private Map hosts = new Hashtable();
     private String proxyHost = null;
     private int proxyPort;
@@ -75,8 +77,16 @@ public class FreeHostApplet extends JApplet implements ComponentListener {
             Host dest = (Host) (hosts.values().toArray())[0];
 
             // TODO: make destination host selectable
-            scr.connect(proxyHost, proxyPort, dest.getHostName(),
-                dest.getPort(), false);
+            try {
+				scr.connect(dest.getHostName(),
+				    dest.getPort());
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
 
         log.info("connected");
@@ -116,9 +126,6 @@ public class FreeHostApplet extends JApplet implements ComponentListener {
             hosts.put(friendlyName, new Host(hostName, hostPort, friendlyName));
         }
 
-        //         rht = new RHTest(getParameter("RightHostServer"),
-        //                 Integer.parseInt(getParameter("RightHostPort")),
-        //                 getParameter("DefaultHost"), hosts, null);
         buildGui();
     }
 
@@ -132,42 +139,15 @@ public class FreeHostApplet extends JApplet implements ComponentListener {
 
     private void buildGui() {
         Container contentPane = getContentPane();
-
-        toolBar = new JToolBar();
-        toolBar.add(new AbstractAction("Connect") {
-                public void actionPerformed(ActionEvent e) {
-                    FreeHostApplet.this.connect();
-                }
-            });
-        toolBar.add(new AbstractAction("Disconnect") {
-                public void actionPerformed(ActionEvent e) {
-                    FreeHostApplet.this.disconnect();
-                }
-            });
-        toolBar.add(new AbstractAction("Redraw") {
-                public void actionPerformed(ActionEvent e) {
-                    FreeHostApplet.this.redrawScreen();
-                }
-            });
-        toolBar.add(new AbstractAction("Print") {
-        	public void actionPerformed(ActionEvent e) {
-        		PrinterJob printJob = PrinterJob.getPrinterJob();
-        		printJob.setPrintable(scr);
-        		if (printJob.printDialog()) {
-        			try { 
-        				printJob.print();
-        			} catch(PrinterException pe) {
-        				System.out.println("Error printing: " + pe);
-        			}
-        		}
-        	}
-        });
-        contentPane.add(toolBar, BorderLayout.NORTH);
-
         scr = new JTerminalScreen();
-        contentPane.add(scr);
+        scr.setAlignmentX(CENTER_ALIGNMENT);
+        contentPane.setBackground(Color.BLACK);
         this.addKeyListener(scr);
+        scr.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        contentPane.add(Box.createHorizontalStrut(this.getWidth()/2-scr.getWidth()/2),BorderLayout.WEST);
+        contentPane.add(scr,BorderLayout.CENTER);
         connect();
-        scr.requestFocusInWindow();
+        
+		scr.requestFocusInWindow();
     }
 }
