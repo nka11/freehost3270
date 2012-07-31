@@ -1,1 +1,7 @@
-*/target
+target
+build
+*.class
+.project
+.classpath
+.settings/
+.metadata
